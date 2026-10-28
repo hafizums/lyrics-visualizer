@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LyricTok Studio — Local TikTok Lyrics Visualizer</title>
+  <!-- Google Fonts (gracefully falls back to system fonts if offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;600;700;900&family=Montserrat:ital,wght@0,700;0,900;1,700&family=Outfit:wght@500;700;900&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Rye&family=Space+Mono:ital,wght@0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bangers&family=Bowlby+One+SC&family=Bungee&family=Caveat:wght@700&family=Cormorant+Garamond:ital,wght@0,700;1,700&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@700&family=Kalam:wght@700&family=Lilita+One&family=Luckiest+Guy&family=Oswald:wght@700&family=Pacifico&family=Patrick+Hand&family=Roboto+Condensed:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Boogaloo&family=Bubblegum+Sans&family=Chewy&family=Chicle&family=Coiny&family=Comic+Neue:wght@700&family=DynaPuff:wght@700&family=Fredoka:wght@700&family=Gochi+Hand&family=Grandstander:wght@900&family=Nerko+One&family=Ranchers&family=Titan+One&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Audiowide&family=Comfortaa:wght@700&family=Creepster&family=Great+Vibes&family=Indie+Flower&family=Libre+Baskerville:ital,wght@0,700;1,400&family=Lobster&family=Lora:ital,wght@0,700;1,700&family=Metal+Mania&family=Monoton&family=Orbitron:wght@900&family=Press+Start+2P&family=Quicksand:wght@700&family=Righteous&family=Rubik+Wet+Paint&family=Sacramento&family=Syncopate:wght@700&family=Teko:wght@700&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20261026e" />
+</head>
+<body>
+  <!-- Top Header Bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="logo-icon">♪</span>
+      </div>
+      <div>
+        <h1>LyricTok <span class="badge-pro">LOCAL STUDIO</span></h1>
+        <p class="subtitle">100% Private Local TikTok Lyrics &amp; Audio Visualizer</p>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="aspect-switcher" title="Canvas Aspect Ratio">
+        <button class="aspect-btn active" data-aspect="9:16">9:16 <span>TikTok</span></button>
+        <button class="aspect-btn" data-aspect="1:1">1:1 <span>Square</span></button>
+        <button class="aspect-btn" data-aspect="16:9">16:9 <span>Wide</span></button>
+      </div>
+
+      <label class="toggle-pill" title="Show TikTok UI Safe Zones (buttons & caption areas)">
+        <input type="checkbox" id="safeZoneToggle" />
+        <span>TikTok Safe Zone</span>
+      </label>
+    </div>
+
+    <div class="topbar-actions">
+      <button id="loadDemoBtn" class="btn btn-secondary" title="Load a built-in synth demo beat & synced lyrics">
+        ✨ Load Demo
+      </button>
+      <select id="exportFpsSelect" class="select-input" style="width: auto; padding: 7px 10px; font-size: 0.78rem;" title="Export Frame Rate (Constant Frame Rate MP4)">
+        <option value="60" selected>60 FPS (Ultra Smooth)</option>
+        <option value="30">30 FPS (Fast Render)</option>
+      </select>
+      <button id="exportVideoBtn" class="btn btn-primary">
+        <span class="rec-dot"></span> Export MP4
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+    <!-- Left Panel: Uploads, Lyrics & Sync -->
+    <aside class="panel panel-left">
+      <div class="panel-tabs">
+        <button class="tab-btn active" data-tab="tab-media">1. Media</button>
+        <button class="tab-btn" data-tab="tab-lyrics">2. Lyrics &amp; Sync</button>
+      </div>
+
+      <!-- TAB 1: MEDIA UPLOADS -->
+      <div class="tab-content active" id="tab-media">
+        <!-- Audio Upload Card -->
+        <div class="upload-section">
+          <div class="section-header">
+            <h3>🎵 Song / Audio</h3>
+            <span id="audioStatusBadge" class="status-badge">No audio</span>
+          </div>
+          <label class="dropzone" id="audioDropzone">
+            <input type="file" id="audioInput" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac" hidden />
+            <div class="dropzone-inner">
+              <div class="drop-icon">🎧</div>
+              <div class="drop-text">
+                <strong id="audioFileName">Upload Song (MP3, WAV, M4A)</strong>
+                <span>Click or drag &amp; drop audio file here</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Lyrics File Upload Card -->
+        <div class="upload-section">
+          <div class="section-header">
+            <h3>📝 Lyrics (.SRT, .LRC, .TXT)</h3>
+            <span id="lyricsStatusBadge" class="status-badge">No lyrics</span>
+          </div>
+          <label class="dropzone" id="lyricsDropzone">
+            <input type="file" id="lyricsInput" accept=".srt,.lrc,.vtt,.txt,text/plain" hidden />
+            <div class="dropzone-inner">
+              <div class="drop-icon">💬</div>
+              <div class="drop-text">
+                <strong id="lyricsFileName">Upload .SRT or .LRC File</strong>
+                <span>Auto-syncs lines &amp; word-by-word timing</span>
+              </div>
+            </div>
+          </label>
+          <div class="quick-row">
+            <button id="openPasteModalBtn" class="btn btn-sm btn-ghost">📋 Paste / Write Lyrics</button>
+            <button id="switchToSyncTabBtn" class="btn btn-sm btn-ghost">⚡ Edit &amp; Tap-Sync</button>
+          </div>
+        </div>
+
+        <!-- Background Video / Images Upload Card -->
+        <div class="upload-section">
+          <div class="section-header">
+            <h3>🎬 Background Video or Images</h3>
+            <span id="bgStatusBadge" class="status-badge">Procedural BG</span>
+          </div>
+          <label class="dropzone" id="bgDropzone">
+            <input type="file" id="bgInput" accept="video/*,image/*,.mp4,.webm,.mov,.jpg,.jpeg,.png,.webp,.gif" multiple hidden />
+            <div class="dropzone-inner">
+              <div class="drop-icon">🖼️</div>
+              <div class="drop-text">
+                <strong id="bgFileName">Upload Video or Multiple Images</strong>
+                <span>Supports MP4/WebM or multi-photo slideshow</span>
+              </div>
+            </div>
+          </label>
+          <div id="bgMediaList" class="media-thumbs hidden"></div>
+          <div class="quick-row">
+            <button id="clearBgBtn" class="btn btn-sm btn-ghost hidden">🗑️ Clear Uploaded BG</button>
+          </div>
+        </div>
+
+        <!-- Built-in Procedural Background Picker -->
+        <div class="control-group">
+          <label class="control-label">Built-in Aesthetic Theme (Fallback / Overlay)</label>
+          <div class="preset-grid compact-grid" id="bgThemeGrid">
+            <button class="chip-btn active" data-bg-theme="cyber-neon">Cyber Neon</button>
+            <button class="chip-btn" data-bg-theme="circus-tent">🎪 Circus</button>
+            <button class="chip-btn" data-bg-theme="midnight-aurora">Aurora</button>
+            <button class="chip-btn" data-bg-theme="sunset-phonk">Phonk Red</button>
+            <button class="chip-btn" data-bg-theme="dreamy-pastel">Dreamy</button>
+            <button class="chip-btn" data-bg-theme="starfield">Starfield</button>
+            <button class="chip-btn" data-bg-theme="pitch-black">Pure Dark</button>
+          </div>
+        </div>
+
+        <!-- Clip Trim / Export Range -->
+        <div class="control-group">
+          <div class="section-header">
+            <label class="control-label">✂️ Clip Trim Range (for TikTok export)</label>
+            <button id="resetTrimBtn" class="btn-link">Full Song</button>
+          </div>
+          <div class="two-col">
+            <div>
+              <span class="sub-label">Start (sec)</span>
+              <input type="number" id="trimStartInput" class="num-input" value="0" min="0" step="0.5" />
+            </div>
+            <div>
+              <span class="sub-label">End (sec)</span>
+              <input type="number" id="trimEndInput" class="num-input" value="0" min="0" step="0.5" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: LYRICS & SYNC EDITOR -->
+      <div class="tab-content" id="tab-lyrics">
+        <div class="sync-toolbar">
+          <div class="offset-control">
+            <div class="flex-between">
+              <label class="control-label">⏱️ Global Lyric Offset</label>
+              <span id="offsetValueLabel" class="mono-badge">0.00s</span>
+            </div>
+            <div class="offset-row">
+              <button class="btn btn-xs" id="offsetMinusBtn" title="Shift lyrics 100ms earlier">-0.1s</button>
+              <input type="range" id="lyricOffsetSlider" min="-5" max="5" step="0.05" value="0" />
+              <button class="btn btn-xs" id="offsetPlusBtn" title="Shift lyrics 100ms later">+0.1s</button>
+              <button class="btn btn-xs" id="offsetResetBtn" title="Reset offset">0s</button>
+            </div>
+          </div>
+
+          <div class="tap-sync-box">
+            <div class="flex-between">
+              <div>
+                <strong>🎹 Live Tap-to-Sync</strong>
+                <p class="tiny-hint">Play audio &amp; press <kbd>M</kbd> or click button to stamp line start</p>
+              </div>
+              <button id="tapSyncBtn" class="btn btn-sm btn-accent">Stamp Next Line (M)</button>
+            </div>
+          </div>
+
+          <div class="quick-row">
+            <button id="addLyricLineBtn" class="btn btn-xs btn-ghost">+ Add Line</button>
+            <button id="autoDistributeBtn" class="btn btn-xs btn-ghost" title="Evenly space all lyrics across song duration">🪄 Auto-Space</button>
+            <button id="exportSrtBtn" class="btn btn-xs btn-ghost" title="Download synced .SRT file">💾 Save .SRT</button>
+          </div>
+        </div>
+
+        <div id="lyricsListContainer" class="lyrics-list">
+          <!-- Dynamically populated lyric items -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Panel: Live Canvas Preview & Playback Controls -->
+    <section class="panel-center">
+      <div class="canvas-stage" id="canvasStage">
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="visualizerCanvas" width="1080" height="1920"></canvas>
+          <div class="canvas-hint" id="canvasDragHint">💡 Tip: Drag lyrics directly on canvas to reposition</div>
+        </div>
+      </div>
+
+      <!-- Timeline & Transport Controls -->
+      <div class="transport-bar">
+        <div class="transport-controls">
+          <button id="restartBtn" class="icon-btn" title="Restart (0:00)">⏮</button>
+          <button id="playPauseBtn" class="play-btn" title="Play / Pause (Space)">▶</button>
+          <div class="time-readout">
+            <span id="currentTimeLabel">0:00.0</span>
+            <span class="time-sep">/</span>
+            <span id="durationLabel">0:00.0</span>
+          </div>
+        </div>
+
+        <!-- Interactive Waveform + SRT Timeline -->
+        <div class="timeline-wrapper" id="timelineWrapper">
+          <canvas id="timelineCanvas" width="900" height="54"></canvas>
+        </div>
+
+        <div class="volume-controls">
+          <span class="vol-icon" id="muteToggleBtn">🔊</span>
+          <input type="range" id="volumeSlider" min="0" max="1" step="0.02" value="0.9" title="Volume" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Style, Visualizer & Effects -->
+    <aside class="panel panel-right">
+      <div class="panel-tabs">
+        <button class="tab-btn active" data-tab="tab-style">Lyric Style</button>
+        <button class="tab-btn" data-tab="tab-audio-fx">Visualizer</button>
+        <button class="tab-btn" data-tab="tab-bg-fx">BG &amp; FX</button>
+      </div>
+
+      <!-- RIGHT TAB 1: LYRIC ANIMATION & TYPOGRAPHY -->
+      <div class="tab-content active" id="tab-style">
+        <div class="control-group">
+          <label class="checkbox-row" for="lyricsBehindPersonToggle">
+            <input type="checkbox" id="lyricsBehindPersonToggle" aria-describedby="personMaskStatus" />
+            <span>Lyrics behind person</span>
+          </label>
+          <p class="tiny-hint" id="personMaskStatus" role="status">Upload a video, then enable to place lyrics behind people. Processing stays on this device.</p>
+          <div id="personMaskControls" class="hidden mt-10">
+            <div class="flex-between">
+              <label class="control-label" for="personMaskFeatherSlider">Mask edge softness</label>
+              <span id="personMaskFeatherVal" class="mono-badge">2px</span>
+            </div>
+            <input type="range" id="personMaskFeatherSlider" min="0" max="12" step="1" value="2" />
+            <p class="tiny-hint">Best with a clearly visible person. Automatic masking may miss hair, fast motion, or animated characters.</p>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="flex-between">
+            <span class="control-label">Lyric Animation</span>
+            <button id="randomizeStyleSectionBtn" class="btn btn-sm btn-secondary" title="Choose one animation to suit the current phrase's beat">Match Beat</button>
+          </div>
+          <div class="preset-filter-row">
+            <input type="search" id="presetSearchInput" class="preset-search-input" placeholder="Search animations?" aria-label="Search lyric animations" />
+            <div class="preset-tier-chips" id="presetTierChips" role="group" aria-label="Animation type">
+              <button class="chip-btn active" data-tier="all" aria-pressed="true">All</button>
+              <button class="chip-btn" data-tier="new" aria-pressed="false">New</button>
+              <button class="chip-btn" data-tier="chill" aria-pressed="false">Minimal</button>
+              <button class="chip-btn" data-tier="melodic" aria-pressed="false">Smooth</button>
+              <button class="chip-btn" data-tier="upbeat" aria-pressed="false">Word timing</button>
+              <button class="chip-btn" data-tier="drop" aria-pressed="false">Bold</button>
+            </div>
+          </div>
+          <div class="preset-grid" id="lyricStyleGrid"></div>
+          <p id="presetEmptyMessage" class="tiny-hint" role="status" hidden>No matching animations. Try another name or category.</p>
+          <p class="tiny-hint">Match Beat chooses one animation. Your font, size, colors, and position stay as set.</p>
+        </div>
+
+        <div class="control-group">
+          <div id="fontMoodControls" class="font-mood-controls" hidden>
+            <label class="control-label" for="fontMoodSelect">Song Mood</label>
+            <select id="fontMoodSelect" class="select-input" aria-describedby="fontFamilyHint">
+              <option value="all">All moods</option>
+            </select>
+          </div>
+          <label class="control-label" for="fontFamilySelect">🔤 Font Family</label>
+          <select id="fontFamilySelect" class="select-input" aria-describedby="fontFamilyHint">
+            <optgroup label="Hype &amp; energetic">
+              <option value="'Montserrat', sans-serif" selected>Montserrat Black (TikTok Classic)</option>
+              <option value="'Bricolage Grotesque', sans-serif">Bricolage Grotesque ExtraBold (Punchy / Modern)</option>
+              <option value="'Bebas Neue', sans-serif">Bebas Neue (Tall Impact)</option>
+              <option value="'Syne', sans-serif">Syne ExtraBold (Aesthetic Hype)</option>
+              <option value="'Anton', sans-serif">Anton (Heavy Impact)</option>
+              <option value="'Archivo Black', sans-serif">Archivo Black (Chunky Block)</option>
+              <option value="'Oswald', sans-serif">Oswald (Tall &amp; Condensed)</option>
+              <option value="'Roboto Condensed', sans-serif">Roboto Condensed Black (Narrow Headline)</option>
+              <option value="'Righteous', sans-serif">Righteous (Dance-floor Groove)</option>
+              <option value="'Teko', sans-serif">Teko (Big Chorus / Stadium)</option>
+            </optgroup>
+            <optgroup label="Happy &amp; playful">
+              <option value="'Baloo 2', cursive">Baloo 2 ExtraBold (Soft &amp; Bouncy)</option>
+              <option value="'Boogaloo', cursive">Boogaloo (Wobbly Cartoon)</option>
+              <option value="'Bubblegum Sans', cursive">Bubblegum Sans (Playful Bubble Letters)</option>
+              <option value="'Chewy', cursive">Chewy (Chunky Hand-drawn)</option>
+              <option value="'Chicle', cursive">Chicle (Squishy Retro Cartoon)</option>
+              <option value="'Coiny', cursive">Coiny (Puffy &amp; Rounded)</option>
+              <option value="'Comic Neue', cursive">Comic Neue Bold (Comic Dialogue)</option>
+              <option value="'DynaPuff', cursive">DynaPuff Bold (Big Bubble Letters)</option>
+              <option value="'Fredoka', sans-serif">Fredoka Bold (Round &amp; Friendly)</option>
+              <option value="'Gochi Hand', cursive">Gochi Hand (Doodle Lettering)</option>
+              <option value="'Grandstander', cursive">Grandstander Black (Bouncy Comic)</option>
+              <option value="'Nerko One', cursive">Nerko One (Irregular Cartoon)</option>
+              <option value="'Ranchers', cursive">Ranchers (Tall Cartoon Poster)</option>
+              <option value="'Titan One', sans-serif">Titan One (Super Chunky Cartoon)</option>
+              <option value="'Bangers', cursive">Bangers (Comic Brush)</option>
+              <option value="'Lilita One', sans-serif">Lilita One (Rounded &amp; Playful)</option>
+              <option value="'Luckiest Guy', cursive">Luckiest Guy (Hand-drawn Bold)</option>
+            </optgroup>
+            <optgroup label="Romantic &amp; warm">
+              <option value="'Dancing Script', cursive">Dancing Script Bold (Flowing Script)</option>
+              <option value="'Pacifico', cursive">Pacifico (Retro Script)</option>
+              <option value="'Cormorant Garamond', serif">Cormorant Garamond Bold (Romantic Serif)</option>
+              <option value="'Great Vibes', cursive">Great Vibes (Elegant Love Song)</option>
+              <option value="'Sacramento', cursive">Sacramento (Tender Handwritten Script)</option>
+            </optgroup>
+            <optgroup label="Sad &amp; emotional">
+              <option value="'Playfair Display', serif">Playfair Display Italic (Indie/Sad)</option>
+              <option value="'DM Serif Display', serif">DM Serif Display (Classic Lyric Edit)</option>
+              <option value="'Lora', serif">Lora (Heartbreak / Storytelling)</option>
+              <option value="'Libre Baskerville', serif">Libre Baskerville (Nostalgic / Poignant)</option>
+            </optgroup>
+            <optgroup label="Chill &amp; dreamy">
+              <option value="'Outfit', sans-serif">Outfit Bold (Clean Modern)</option>
+              <option value="'Inter', sans-serif">Inter Heavy (Minimalist)</option>
+              <option value="'Quicksand', sans-serif">Quicksand (Soft / Airy)</option>
+              <option value="'Comfortaa', sans-serif">Comfortaa (Floating / Dream Pop)</option>
+            </optgroup>
+            <optgroup label="Angry &amp; rebellious">
+              <option value="'Permanent Marker', cursive">Permanent Marker (Street/Grunge)</option>
+              <option value="'Rubik Wet Paint', cursive">Rubik Wet Paint (Raw Graffiti / Rage)</option>
+              <option value="'Metal Mania', cursive">Metal Mania (Heavy Rock / Aggressive)</option>
+            </optgroup>
+            <optgroup label="Dark &amp; mysterious">
+              <option value="'Rye', serif">Rye Woodtype (Vintage Dark Circus / Band)</option>
+              <option value="'Cinzel Decorative', serif">Cinzel Decorative (Gothic / Theatrical Rock)</option>
+              <option value="'Creepster', cursive">Creepster (Spooky / Horror)</option>
+              <option value="'UnifrakturCook', cursive">UnifrakturCook (Blackletter / Ominous)</option>
+            </optgroup>
+            <optgroup label="Retro &amp; nostalgic">
+              <option value="'Bowlby One SC', sans-serif">Bowlby One SC (Wide Poster)</option>
+              <option value="'Bungee', sans-serif">Bungee (Retro Block)</option>
+              <option value="'Lobster', cursive">Lobster (Old-school Soul / Swing)</option>
+              <option value="'Monoton', monospace">Monoton (Disco / Neon Nights)</option>
+              <option value="'Press Start 2P', monospace">Press Start 2P (Arcade / Chiptune)</option>
+            </optgroup>
+            <optgroup label="Futuristic &amp; electronic">
+              <option value="'Space Mono', monospace">Space Mono (Cyber/Lyric Edit)</option>
+              <option value="'Orbitron', sans-serif">Orbitron (Sci-fi / Synthwave)</option>
+              <option value="'Audiowide', sans-serif">Audiowide (Electronic / Space Groove)</option>
+              <option value="'Syncopate', sans-serif">Syncopate (Wide / Futuristic)</option>
+            </optgroup>
+            <optgroup label="Acoustic &amp; intimate">
+              <option value="'Caveat', cursive">Caveat Bold (Loose Handwriting)</option>
+              <option value="'Kalam', cursive">Kalam Bold (Brush Handwriting)</option>
+              <option value="'Patrick Hand', cursive">Patrick Hand (Casual Handwriting)</option>
+              <option value="'Amatic SC', cursive">Amatic SC (Delicate / Indie Folk)</option>
+              <option value="'Indie Flower', cursive">Indie Flower (Diary / Bedroom Acoustic)</option>
+            </optgroup>
+          </select>
+          <p id="fontFamilyHint" class="tiny-hint">Choose a song mood to narrow the font previews. Find cartoon fonts under Happy &amp; playful.</p>
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label" for="fontSizeSlider">Font Size</label>
+            <span id="fontSizeVal" class="mono-badge">68px</span>
+          </div>
+          <div class="font-size-controls">
+            <input type="range" id="fontSizeSlider" min="32" max="500" step="1" value="68" aria-describedby="fontSizeHint" />
+            <input type="number" id="fontSizeInput" class="num-input" min="32" max="500" step="1" value="68" aria-label="Font size in pixels" aria-describedby="fontSizeHint" />
+          </div>
+          <p id="fontSizeHint" class="tiny-hint">32–500 px on the output canvas. Try 180–320 px for bold, stacked lyrics. Long words auto-fit to the canvas.</p>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Text Case &amp; Alignment</label>
+          <div class="chip-row">
+            <button class="chip-btn" data-case="none">Normal</button>
+            <button class="chip-btn active" data-case="uppercase">UPPER</button>
+            <button class="chip-btn" data-case="lowercase">lower</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">🎨 Colors</label>
+          <div class="color-row">
+            <div class="color-item">
+              <input type="color" id="primaryColorPicker" value="#ffffff" />
+              <span>Base Text</span>
+            </div>
+            <div class="color-item">
+              <input type="color" id="activeColorPicker" value="#00f2fe" />
+              <span>Active Word</span>
+            </div>
+            <div class="color-item">
+              <input type="color" id="glowColorPicker" value="#ff0055" />
+              <span>Glow / Accent</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">Glow &amp; Shadow Intensity</label>
+            <span id="glowStrengthVal" class="mono-badge">25</span>
+          </div>
+          <input type="range" id="glowStrengthSlider" min="0" max="60" value="25" />
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">Text Outline (Stroke)</label>
+            <span id="strokeWidthVal" class="mono-badge">4px</span>
+          </div>
+          <input type="range" id="strokeWidthSlider" min="0" max="16" value="4" />
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">Vertical Position (Y)</label>
+            <button id="centerPosBtn" class="btn-link">Center</button>
+          </div>
+          <input type="range" id="posYSlider" min="15" max="85" value="50" />
+        </div>
+      </div>
+
+      <!-- RIGHT TAB 2: AUDIO VISUALIZER & OVERLAYS -->
+      <div class="tab-content" id="tab-audio-fx">
+        <div class="control-group">
+          <label class="control-label">📊 Audio Spectrum Visualizer</label>
+          <div class="preset-grid compact-grid" id="spectrumModeGrid">
+            <button class="chip-btn active" data-spectrum="bottom-bars">Bottom Bars</button>
+            <button class="chip-btn" data-spectrum="circle-ring">Neon Ring</button>
+            <button class="chip-btn" data-spectrum="mirror-wave">Laser Wave</button>
+            <button class="chip-btn" data-spectrum="center-pulse">Center Horizon</button>
+            <button class="chip-btn" data-spectrum="none">Hidden</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">Visualizer Sensitivity / Reactivity</label>
+            <span id="reactivityVal" class="mono-badge">1.4x</span>
+          </div>
+          <input type="range" id="reactivitySlider" min="0.4" max="3.0" step="0.1" value="1.4" />
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">✨ Floating Particles</label>
+          <div class="preset-grid compact-grid" id="particleModeGrid">
+            <button class="chip-btn active" data-particles="embers">Glowing Orbs</button>
+            <button class="chip-btn" data-particles="confetti">🃏 Dark Tarot</button>
+            <button class="chip-btn" data-particles="stars">Starlight</button>
+            <button class="chip-btn" data-particles="hearts">Neon Hearts</button>
+            <button class="chip-btn" data-particles="snow">Cyber Rain</button>
+            <button class="chip-btn" data-particles="none">Off</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">Particle Count</label>
+            <span id="particleCountVal" class="mono-badge">45</span>
+          </div>
+          <input type="range" id="particleCountSlider" min="0" max="120" value="45" />
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">🏷️ Song Title / Artist Header</label>
+          <input type="text" id="songTitleInput" class="text-input" placeholder="Song Title (optional)" value="" />
+          <input type="text" id="songArtistInput" class="text-input mt-6" placeholder="@artist or watermark" value="" />
+        </div>
+      </div>
+
+      <!-- RIGHT TAB 3: BACKGROUND & CAMERA FX -->
+      <div class="tab-content" id="tab-bg-fx">
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">🥁 Bass Zoom Pulse</label>
+            <span id="bassShakeVal" class="mono-badge">20%</span>
+          </div>
+          <input type="range" id="bassShakeSlider" min="0" max="100" value="20" />
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">🌑 Background Dim (Darken Overlay)</label>
+            <span id="bgDimVal" class="mono-badge">40%</span>
+          </div>
+          <input type="range" id="bgDimSlider" min="0" max="90" value="40" />
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">💧 Background Blur</label>
+            <span id="bgBlurVal" class="mono-badge">0px</span>
+          </div>
+          <input type="range" id="bgBlurSlider" min="0" max="24" value="0" />
+        </div>
+
+        <div class="control-group">
+          <div class="flex-between">
+            <label class="control-label">🎞️ Vignette &amp; Cinema Grain</label>
+            <span id="vignetteVal" class="mono-badge">45%</span>
+          </div>
+          <input type="range" id="vignetteSlider" min="0" max="100" value="45" />
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">🖼️ Image Fit &amp; Slideshow Speed</label>
+          <div class="chip-row">
+            <button class="chip-btn active" data-fit="cover">Cover (Fill 9:16)</button>
+            <button class="chip-btn" data-fit="contain">Contain + Blur BG</button>
+          </div>
+          <div class="flex-between mt-10">
+            <span class="sub-label">Multi-Image Slide Duration</span>
+            <span id="slideDurationVal" class="mono-badge">4.0s</span>
+          </div>
+          <input type="range" id="slideDurationSlider" min="1" max="15" step="0.5" value="4" />
+          <label class="checkbox-row mt-6">
+            <input type="checkbox" id="kenBurnsToggle" checked />
+            <span>Smooth Ken Burns Zoom/Pan on Images</span>
+          </label>
+          <label class="checkbox-row mt-6">
+            <input type="checkbox" id="beatSlideToggle" />
+            <span>Switch Images on Strong Bass Drops</span>
+          </label>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modal: Paste / Edit Raw Lyrics (.SRT, .LRC, or Plain Text) -->
+  <div class="modal-backdrop hidden" id="pasteLyricsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📋 Paste SRT, LRC, or Plain Lyrics</h3>
+        <button id="closePasteModalBtn" class="icon-btn">✕</button>
+      </div>
+      <p class="modal-desc">
+        Paste formatted <code>.srt</code> / <code>.lrc</code> timestamps, OR paste plain text lyrics (one line per row) and we'll automatically sync &amp; space them across your song!
+      </p>
+      <textarea id="rawLyricsTextarea" rows="12" placeholder="1
+00:00:01,000 --> 00:00:04,000
+Walking through the neon lights tonight
+
+2
+00:00:04,200 --> 00:00:07,500
+Every beat is pulling us closer...
+
+(Or just paste plain lines of text!)"></textarea>
+      <div class="modal-footer">
+        <button id="cancelPasteBtn" class="btn btn-secondary">Cancel</button>
+        <button id="applyPasteBtn" class="btn btn-primary">Parse &amp; Sync Lyrics</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Video Export Progress -->
+  <div class="modal-backdrop hidden" id="exportModal">
+    <div class="modal-box export-modal-box">
+      <div class="modal-header">
+        <h3>🎬 Rendering TikTok Lyric Video</h3>
+      </div>
+      <p class="modal-desc" id="exportStatusText">Recording canvas &amp; high-quality audio in real time...</p>
+      <div class="progress-track">
+        <div class="progress-fill" id="exportProgressBar" style="width: 0%"></div>
+      </div>
+      <div class="flex-between mt-10">
+        <span id="exportPercentLabel" class="mono-badge">0%</span>
+        <span id="exportTimeRemaining" class="sub-label">Please keep this tab visible</span>
+      </div>
+      <div class="modal-footer mt-14">
+        <button id="stopSaveEarlyBtn" class="btn btn-secondary">⏹ Stop &amp; Save Now</button>
+        <button id="cancelExportBtn" class="btn btn-ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="foreground.js?v=20261020c"></script>
+  <script src="lyric-animations-extra.js?v=20261026e"></script>
+  <script src="lyric-animations.js?v=20261026e"></script>
+  <script src="app.js?v=20261026e"></script>
+  <script src="font-picker.js?v=20261026c"></script>
+</body>
+</html>
